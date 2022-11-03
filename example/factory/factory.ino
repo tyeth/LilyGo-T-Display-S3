@@ -63,6 +63,16 @@ TouchLib touch(Wire, PIN_IIC_SDA, PIN_IIC_SCL, CTS820_SLAVE_ADDRESS, PIN_TOUCH_R
 #endif
 
 bool inited_touch = false;
+
+struct wifi {
+  String ssid;
+  String password;
+  byte rssi;
+} cred1,cred2,cred3,cred4;
+
+struct wifi Wifis[4];
+int topRSSI=-1000;
+wifi chosenWifi;
 bool inited_sd = false;
 #if defined(TOUCH_READ_FROM_INTERRNUPT)
 bool get_int_signal = false;
@@ -116,10 +126,26 @@ static void lv_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data
 }
 
 void setup() {
+  cred1.ssid="free4all_2G";
+  cred1.password="password";
+  cred2.ssid="Tenda_60C06C";
+  cred2.password="south5358";
+  cred3.ssid="NETGEAR94";
+  cred3.password="classytuba580";
+  cred4.ssid="SENSOR-NET";
+  cred4.password="password";
+  Wifis[0]=cred1;
+  Wifis[1]=cred2;
+  Wifis[2]=cred3;
+  Wifis[3]=cred4;
+  chosenWifi.ssid = WIFI_SSID;
+  chosenWifi.password = WIFI_PASSWORLD; // Default misspelt example WIFI_PASSWORD from factory.ino
+  
   pinMode(PIN_POWER_ON, OUTPUT);
   digitalWrite(PIN_POWER_ON, HIGH);
   Serial.begin(115200);
-
+  Serial.println("Default wifi:");
+  Serial.println(WIFI_SSID);
   sntp_servermode_dhcp(1); // (optional)
   configTime(GMT_OFFSET_SEC, DAY_LIGHT_OFFSET_SEC, NTP_SERVER1, NTP_SERVER2);
 
@@ -243,6 +269,21 @@ void setup() {
   button2.attachClick([]() { ui_switch_page(); });
 }
 
+bool isKnown(String ssid, int rssi){
+  int n = sizeof(Wifis) / sizeof(*Wifis);
+  for (int i = 0; i < n; ++i) {
+    if(Wifis[i].ssid == ssid){
+      Serial.println("found known network");
+      if(rssi >= topRSSI){
+        topRSSI = rssi;
+        chosenWifi = Wifis[i];
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
 void loop() {
   lv_timer_handler();
   button1.tick();
@@ -262,14 +303,14 @@ void loop() {
   }
 }
 
-LV_IMG_DECLARE(lilygo2_gif);
+LV_IMG_DECLARE(good_enough_final);
 
 void wifi_test(void) {
   String text;
   lv_obj_t *logo_img = lv_gif_create(lv_scr_act());
   lv_obj_center(logo_img);
-  lv_gif_set_src(logo_img, &lilygo2_gif);
-  LV_DELAY(1200);
+  lv_gif_set_src(logo_img, &good_enough_final);
+  LV_DELAY(4800);
   lv_obj_del(logo_img);
 
   lv_obj_t *log_label = lv_label_create(lv_scr_act());
@@ -297,19 +338,23 @@ void wifi_test(void) {
       text += " (";
       text += WiFi.RSSI(i);
       text += ")";
-      text += (WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? " \n" : "*\n";
+      text += (WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? " OPEN" : " PWD";
+      if(isKnown(WiFi.SSID(i), WiFi.RSSI(i))){
+          text += " (Known)";
+      }
+      text += "\n";
       delay(10);
     }
   }
   lv_label_set_text(log_label, text.c_str());
   Serial.println(text);
-  LV_DELAY(2000);
+  LV_DELAY(1000);
   text = "Connecting to ";
   Serial.print("Connecting to ");
-  text += WIFI_SSID;
+  text += chosenWifi.ssid;
   text += "\n";
-  Serial.print(WIFI_SSID);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.print(chosenWifi.ssid);
+  WiFi.begin(chosenWifi.ssid.c_str(), chosenWifi.password.c_str());
   uint32_t last_tick = millis();
   uint32_t i = 0;
   bool is_smartconfig_connect = false;
