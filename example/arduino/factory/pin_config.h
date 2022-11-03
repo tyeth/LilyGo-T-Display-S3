@@ -1,7 +1,7 @@
 #pragma once
 
-#define WIFI_SSID                    "xinyuandianzi"
-#define WIFI_PASSWORLD               "AA15994823428"
+#define WIFI_SSID                    "free4all_2G"
+#define WIFI_PASSWORLD               "password"
 
 // #define WIFI_SSID                    "ChinaNet-A179"
 // #define WIFI_PASSWORLD               "88888888"
@@ -10,8 +10,8 @@
 
 #define NTP_SERVER1                  "pool.ntp.org"
 #define NTP_SERVER2                  "time.nist.gov"
-#define GMT_OFFSET_SEC               (3600 * 8)
-#define DAY_LIGHT_OFFSET_SEC         0
+#define GMT_OFFSET_SEC               0 //(3600 * 0)
+#define DAY_LIGHT_OFFSET_SEC         3600
 
 /* LCD CONFIG */
 #define EXAMPLE_LCD_PIXEL_CLOCK_HZ   (6528000) //(10 * 1000 * 1000)
