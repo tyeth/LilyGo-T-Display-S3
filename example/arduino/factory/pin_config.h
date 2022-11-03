@@ -1,7 +1,7 @@
 #pragma once
 
-#define WIFI_SSID                    "xinyuandianzi"
-#define WIFI_PASSWORLD               "AA15994823428"
+#define WIFI_SSID                    "free4all_2G"
+#define WIFI_PASSWORLD               "password"
 
 // #define WIFI_SSID                    "ChinaNet-A179"
 // #define WIFI_PASSWORLD               "88888888"
