@@ -142,7 +142,7 @@ void setup() {
   ledcAttachPin(PIN_LCD_BL, 0);
   for (uint8_t i = 0; i < 0xFF; i++) {
     ledcWrite(0, i);
-    delay(2);
+    delay(10);
   }
 
   lv_init();
