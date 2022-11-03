@@ -73,11 +73,22 @@ struct wifi {
 struct wifi Wifis[4];
 int topRSSI=-1000;
 wifi chosenWifi;
+
+struct wifi {
+  String ssid;
+  String password;
+  byte rssi;
+} cred1,cred2,cred3,cred4;
+
+struct wifi Wifis[4];
+int topRSSI=-1000;
+wifi chosenWifi;
 bool inited_sd = false;
 #if defined(TOUCH_READ_FROM_INTERRNUPT)
 bool get_int_signal = false;
 #endif
 
+extern const unsigned char img_logo[20000];
 void wifi_test(void);
 void timeavailable(struct timeval *t);
 void printLocalTime();
@@ -218,7 +229,7 @@ void setup() {
   ledcAttachPin(PIN_LCD_BL, 0);
   for (uint8_t i = 0; i < 0xFF; i++) {
     ledcWrite(0, i);
-    delay(2);
+    delay(10);
   }
 
   lv_init();
