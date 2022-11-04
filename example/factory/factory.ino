@@ -23,6 +23,10 @@
 #include "sntp.h"
 #include "time.h"
 #include "sdkconfig.h"
+#include "assets-wifi-qrcode/ui.h"
+#include "ui.h"
+
+void ui_init(void);
 
 esp_lcd_panel_io_handle_t io_handle = NULL;
 static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
@@ -150,15 +154,17 @@ void setup() {
   Wifis[2]=cred3;
   Wifis[3]=cred4;
   chosenWifi.ssid = WIFI_SSID;
-  chosenWifi.password = WIFI_PASSWORLD; // Default misspelt example WIFI_PASSWORD from factory.ino
-  
+  chosenWifi.password = WIFI_PASSWORLD; // Default misspelt example WIFI_PASSWORD from factory.ino/pin_config.h  
   pinMode(PIN_POWER_ON, OUTPUT);
   digitalWrite(PIN_POWER_ON, HIGH);
   Serial.begin(115200);
   Serial.println("Default wifi:");
   Serial.println(WIFI_SSID);
   sntp_servermode_dhcp(1); // (optional)
-  configTime(GMT_OFFSET_SEC, DAY_LIGHT_OFFSET_SEC, NTP_SERVER1, NTP_SERVER2);
+  //configTime(GMT_OFFSET_SEC, DAY_LIGHT_OFFSET_SEC, NTP_SERVER1, NTP_SERVER2);
+  configTzTime(TIMEZONE, NTP_SERVER1, NTP_SERVER2);
+
+  //region I8080 setup
 
   pinMode(PIN_LCD_RD, OUTPUT);
   digitalWrite(PIN_LCD_RD, HIGH);
@@ -217,6 +223,9 @@ void setup() {
   // the gap is LCD panel specific, even panels with the same driver IC, can
   // have different gap value
   esp_lcd_panel_set_gap(panel_handle, 0, 35);
+  
+  // end region I8080 setup
+
 #if defined(LCD_MODULE_CMD_1)
   for (uint8_t i = 0; i < (sizeof(lcd_st7789v) / sizeof(lcd_cmd_t)); i++) {
     esp_lcd_panel_io_tx_param(io_handle, lcd_st7789v[i].cmd, lcd_st7789v[i].data, lcd_st7789v[i].len & 0x7f);
@@ -225,12 +234,16 @@ void setup() {
   }
 #endif
   /* Lighten the screen with gradient */
+
   ledcSetup(0, 10000, 8);
   ledcAttachPin(PIN_LCD_BL, 0);
   for (uint8_t i = 0; i < 0xFF; i++) {
     ledcWrite(0, i);
     delay(10);
   }
+
+
+  // lvgl init
 
   lv_init();
   lv_disp_buf = (lv_color_t *)heap_caps_malloc(LVGL_LCD_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
@@ -258,6 +271,8 @@ void setup() {
     lv_indev_drv_register(&indev_drv);
   }
   is_initialized_lvgl = true;
+  // end lvgl init
+
 #if defined(TOUCH_READ_FROM_INTERRNUPT)
   attachInterrupt(
       PIN_TOUCH_INT, [] { get_int_signal = true; }, FALLING);
@@ -278,6 +293,17 @@ void setup() {
   });
 
   button2.attachClick([]() { ui_switch_page(); });
+  button2.attachLongPressStop([](){
+    button1.reset();
+    button2.reset();
+    button1.attachClick([](){
+      Serial.println("btn1");  
+    });
+    button2.attachClick([](){
+      Serial.println("btn2");  
+    });
+    ui_init();
+  });
 }
 
 bool isKnown(String ssid, int rssi){
@@ -357,6 +383,7 @@ void wifi_test(void) {
       delay(10);
     }
   }
+  LV_DELAY(250)
   lv_label_set_text(log_label, text.c_str());
   Serial.println(text);
   LV_DELAY(1000);
@@ -425,10 +452,4 @@ void printLocalTime() {
     return;
   }
   Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-}
-// Callback function (get's called when time adjusts via NTP)
-void timeavailable(struct timeval *t) {
-  Serial.println("Got time adjustment from NTP!");
-  printLocalTime();
-  WiFi.disconnect();
 }

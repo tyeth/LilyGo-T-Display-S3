@@ -22,12 +22,12 @@ lv_obj_t * ui_Screen2_Spinner1;
 lv_obj_t * ui_Screen2_TextArea1;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
-// #if LV_COLOR_DEPTH != 16
-//     #error "LV_COLOR_DEPTH should be 16bit to match SquareLine Studio's settings"
-// #endif
-// #if LV_COLOR_16_SWAP !=1
-//     #error "LV_COLOR_16_SWAP should be 1 to match SquareLine Studio's settings"
-// #endif
+#if LV_COLOR_DEPTH != 16
+    #error "LV_COLOR_DEPTH should be 16bit to match SquareLine Studio's settings"
+#endif
+#if LV_COLOR_16_SWAP !=1
+    #error "LV_COLOR_16_SWAP should be 1 to match SquareLine Studio's settings"
+#endif
 
 ///////////////////// ANIMATIONS ////////////////////
 
@@ -56,8 +56,9 @@ void ui_LogoScreen_screen_init(void)
     lv_obj_clear_flag(ui_LogoScreenImage, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
     lv_obj_add_event_cb(ui_LogoScreen, ui_event_LogoScreen, LV_EVENT_ALL, NULL);
-}
+        
 
+}
 void ui_WifiScreen_screen_init(void)
 {
     ui_WifiScreen = lv_obj_create(NULL);
@@ -194,4 +195,6 @@ void ui_init(void)
     ui_WifiScreen_screen_init();
     ui_DeviceScanningScreen_screen_init();
     lv_disp_load_scr(ui_LogoScreen);
+    
+    //_ui_screen_change(ui_DeviceScanningScreen, LV_SCR_LOAD_ANIM_OVER_TOP, 250, 500);
 }

@@ -12,6 +12,9 @@
 #define NTP_SERVER2                  "time.nist.gov"
 #define GMT_OFFSET_SEC               0 //(3600 * 0)
 #define DAY_LIGHT_OFFSET_SEC         3600
+#define TZ_Europe_London             PSTR("GMT0BST,M3.5.0/1,M10.5.0")
+#define TIMEZONE                     TZ_Europe_London
+//now uses TIMEZONE TZ_Europe_London instead
 
 /* LCD CONFIG */
 #define EXAMPLE_LCD_PIXEL_CLOCK_HZ   (20 * 1000 * 1000)
