@@ -350,13 +350,17 @@ void wifi_test(void) {
   LV_DELAY(4800);
   lv_obj_del(logo_img);
 
-  lv_obj_t *log_label = lv_label_create(lv_scr_act());
-  lv_obj_align(log_label, LV_ALIGN_TOP_LEFT, 0, 0);
-  lv_obj_set_width(log_label, LV_PCT(100));
-  lv_label_set_long_mode(log_label, LV_LABEL_LONG_SCROLL);
-  lv_label_set_recolor(log_label, true);
+  ui_init();
+  LV_DELAY(1000)
 
-  lv_label_set_text(log_label, "Scan WiFi");
+//  
+//  lv_obj_t *log_label = lv_label_create(lv_scr_act());
+//  lv_obj_align(log_label, LV_ALIGN_TOP_LEFT, 0, 0);
+//  lv_obj_set_width(log_label, LV_PCT(100));
+
+  lv_textarea_set_text(ui_Screen2_TextArea1, "Scanning WiFi");
+  // lv_label_set_long_mode(ui_Screen2_TextArea1, LV_LABEL_LONG_SCROLL);
+  lv_label_set_recolor(ui_Screen2_TextArea1, true);
   LV_DELAY(1);
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
@@ -384,10 +388,10 @@ void wifi_test(void) {
     }
   }
   LV_DELAY(250)
-  lv_label_set_text(log_label, text.c_str());
+  lv_textarea_set_text(ui_Screen2_TextArea1, text.c_str());
   Serial.println(text);
-  LV_DELAY(1000);
-  text = "Connecting to ";
+  LV_DELAY(500);
+  text += "Connecting to ";
   Serial.print("Connecting to ");
   text += chosenWifi.ssid;
   text += "\n";
@@ -396,22 +400,22 @@ void wifi_test(void) {
   uint32_t last_tick = millis();
   uint32_t i = 0;
   bool is_smartconfig_connect = false;
-  lv_label_set_long_mode(log_label, LV_LABEL_LONG_WRAP);
+//  lv_label_set_long_mode(log_label, LV_LABEL_LONG_WRAP);
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     text += ".";
-    lv_label_set_text(log_label, text.c_str());
+    lv_textarea_set_text(ui_Screen2_TextArea1, text.c_str());
     LV_DELAY(100);
     if (millis() - last_tick > WIFI_CONNECT_WAIT_MAX) { /* Automatically start smartconfig when connection times out */
       text += "\nConnection timed out, start smartconfig";
-      lv_label_set_text(log_label, text.c_str());
+      lv_textarea_set_text(ui_Screen2_TextArea1, text.c_str());
       LV_DELAY(100);
       is_smartconfig_connect = true;
       WiFi.mode(WIFI_AP_STA);
       Serial.println("\r\n wait for smartconfig....");
       text += "\r\n wait for smartconfig....";
-      text += "\nPlease use #ff0000 EspTouch# Apps to connect to the distribution network";
-      lv_label_set_text(log_label, text.c_str());
+      text += "\nPlease use EspTouch Apps to connect to the distribution network";
+      lv_textarea_set_text(ui_Screen2_TextArea1, text.c_str());
       WiFi.beginSmartConfig();
       while (1) {
         LV_DELAY(100);
@@ -424,7 +428,7 @@ void wifi_test(void) {
           text += WiFi.SSID().c_str();
           text += "\nPSW:";
           text += WiFi.psk().c_str();
-          lv_label_set_text(log_label, text.c_str());
+          lv_textarea_set_text(ui_Screen2_TextArea1, text.c_str());
           LV_DELAY(1000);
           last_tick = millis();
           break;
@@ -439,7 +443,7 @@ void wifi_test(void) {
     Serial.print(millis() - last_tick);
     text += " ms\n";
     Serial.println(" millseconds");
-    lv_label_set_text(log_label, text.c_str());
+    lv_textarea_set_text(ui_Screen2_TextArea1, text.c_str());
   }
   LV_DELAY(2000);
   ui_begin();
