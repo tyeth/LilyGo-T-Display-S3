@@ -22,6 +22,7 @@
 #include "pin_config.h"
 #include "sntp.h"
 #include "time.h"
+#include "sdkconfig.h"
 
 esp_lcd_panel_io_handle_t io_handle = NULL;
 static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
@@ -64,15 +65,6 @@ TouchLib touch(Wire, PIN_IIC_SDA, PIN_IIC_SCL, CTS820_SLAVE_ADDRESS, PIN_TOUCH_R
 
 bool inited_touch = false;
 
-struct wifi {
-  String ssid;
-  String password;
-  byte rssi;
-} cred1,cred2,cred3,cred4;
-
-struct wifi Wifis[4];
-int topRSSI=-1000;
-wifi chosenWifi;
 
 struct wifi {
   String ssid;
@@ -87,6 +79,14 @@ bool inited_sd = false;
 #if defined(TOUCH_READ_FROM_INTERRNUPT)
 bool get_int_signal = false;
 #endif
+
+
+extern String WifiTemplateStringSTA = 
+"Wifi Connected\nConnected AP:\nssid: {ssid}\nquality: -45db\nip: {ip}\n\nHelpful QRCode to\njoin wifi then visit\nhttp://{ip}\nin web browser";
+
+extern String WifiTemplateStringAP = 
+"Wifi Connected\nBroadcasting AP:\nssid: {ssid}\npw: {pass}\nip: {ip}\n\nHelpful QRCode to\njoin wifi then visit\nhttp://{ip}\nin web browser";
+
 
 extern const unsigned char img_logo[20000];
 void wifi_test(void);
