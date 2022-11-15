@@ -1,3 +1,6 @@
+
+#define DEBUG 0
+
 /* Please make sure your touch IC model. */
 // #define TOUCH_MODULES_CST_MUTUAL
 #define TOUCH_MODULES_CST_SELF
@@ -25,6 +28,18 @@
 #include "sdkconfig.h"
 #include "assets-wifi-qrcode/ui.h"
 #include "ui.h"
+
+#define LV_DELAY(x)                                                                                                                                  \
+  do {                                                                                                                                               \
+    uint32_t t = x;                                                                                                                                  \
+    while (t--) {                                                                                                                                    \
+      lv_timer_handler();                                                                                                                            \
+      button1.tick();                                                                                                                                \
+      button2.tick();                                                                                                                                \
+      delay(1);                                                                                                                                      \
+    }                                                                                                                                                \
+  } while (0);
+
 
 
 void ui_init(void);
@@ -66,6 +81,8 @@ lcd_cmd_t lcd_st7789v[] = {
 TouchLib touch(Wire, PIN_IIC_SDA, PIN_IIC_SCL, CTS328_SLAVE_ADDRESS, PIN_TOUCH_RES);
 #elif defined(TOUCH_MODULES_CST_SELF)
 TouchLib touch(Wire, PIN_IIC_SDA, PIN_IIC_SCL, CTS820_SLAVE_ADDRESS, PIN_TOUCH_RES);
+
+bool SKIP_CURRENT = 0;
 #endif
 
 bool inited_touch = false;
@@ -160,13 +177,18 @@ void setup() {
   pinMode(PIN_POWER_ON, OUTPUT);
   digitalWrite(PIN_POWER_ON, HIGH);
   Serial.begin(115200);
+#if DEBUG
+  while(!Serial.available())
+    LV_DELAY(10);
+#endif
+  
   Serial.println("Default wifi:");
   Serial.println(WIFI_SSID);
   sntp_servermode_dhcp(1); // (optional)
   //configTime(GMT_OFFSET_SEC, DAY_LIGHT_OFFSET_SEC, NTP_SERVER1, NTP_SERVER2);
   configTzTime(TIMEZONE, NTP_SERVER1, NTP_SERVER2);
 
-	#pragma region I8080 setup
+  #pragma region I8080 setup
 
   pinMode(PIN_LCD_RD, OUTPUT);
   digitalWrite(PIN_LCD_RD, HIGH);
@@ -225,7 +247,7 @@ void setup() {
   // the gap is LCD panel specific, even panels with the same driver IC, can
   // have different gap value
   esp_lcd_panel_set_gap(panel_handle, 0, 35);
-	
+  
   #pragma endregion I8080 setup
 
 #if defined(LCD_MODULE_CMD_1)
@@ -282,9 +304,16 @@ void setup() {
 
   SD_MMC.setPins(PIN_SD_CLK, PIN_SD_CMD, PIN_SD_D0);
   inited_sd = SD_MMC.begin("/sdcard", true, true);
+  Wire.begin(PIN_IIC_SDA, PIN_IIC_SCL);
+  inited_touch = touch.init(Wire, PIN_TOUCH_RES, PIN_TOUCH_INT);
+
+  button1.attachDoubleClick([]() {
+    SKIP_CURRENT = true;
+    Serial.println("Specifying skip");
+  });
 
   wifi_test();
-
+  button1.reset();
   button1.attachClick([]() {
     pinMode(PIN_POWER_ON, OUTPUT);
     pinMode(PIN_LCD_BL, OUTPUT);
@@ -302,12 +331,12 @@ void setup() {
     button1.reset();
     button2.reset();
     button1.attachClick([](){
-      Serial.println("btn1");  
-      esp_reset();
+      Serial.println("btn1");
+      ESP.restart();
     });
     button2.attachClick([](){
       Serial.println("btn2");
-      esp_reset();
+      ESP.restart();
     });
     ui_init();
   });
@@ -329,10 +358,10 @@ bool isKnown(String ssid, int rssi){
 }
 
 void loop() {
-  lv_timer_handler();
-  button1.tick();
-  button2.tick();
-  delay(3);
+  // lv_timer_handler();
+  // button1.tick();
+  // button2.tick();
+  LV_DELAY(1);
   static uint32_t last_tick;
   if (millis() - last_tick > 100) {
     struct tm timeinfo;
@@ -354,7 +383,13 @@ void wifi_test(void) {
   lv_obj_t *logo_img = lv_gif_create(lv_scr_act());
   lv_obj_center(logo_img);
   lv_gif_set_src(logo_img, &good_enough_final);
-  LV_DELAY(4800);
+  int delayCount = 0;
+  SKIP_CURRENT=false;
+  while(delayCount<480 && !SKIP_CURRENT){
+    LV_DELAY(10);
+    delayCount++;
+  }
+  SKIP_CURRENT=false;
   lv_obj_del(logo_img);
 
   ui_init();
@@ -415,7 +450,7 @@ void wifi_test(void) {
     Serial.print(".");
     text += ".";
     lv_textarea_set_text(ui_Screen2_TextArea1, text.c_str());
-    LV_DELAY(100);
+    LV_DELAY(10);
     if (millis() - last_tick > WIFI_CONNECT_WAIT_MAX) { /* Automatically start smartconfig when connection times out */
       text += "\nConnection timed out, start smartconfig";
       lv_textarea_set_text(ui_Screen2_TextArea1, text.c_str());
