@@ -92,7 +92,8 @@ extern String WifiTemplateStringAP =
 "Wifi Connected\nBroadcasting AP:\nssid: {ssid}\npw: {pass}\nip: {ip}\n\nHelpful QRCode to\njoin wifi then visit\nhttp://{ip}\nin web browser";
 
 
-extern const unsigned char img_logo[20000];
+extern const unsigned char img_logo[];
+
 void wifi_test(void);
 void timeavailable(struct timeval *t);
 void printLocalTime();
@@ -164,7 +165,7 @@ void setup() {
   //configTime(GMT_OFFSET_SEC, DAY_LIGHT_OFFSET_SEC, NTP_SERVER1, NTP_SERVER2);
   configTzTime(TIMEZONE, NTP_SERVER1, NTP_SERVER2);
 
-  //region I8080 setup
+	#pragma region I8080 setup
 
   pinMode(PIN_LCD_RD, OUTPUT);
   digitalWrite(PIN_LCD_RD, HIGH);
@@ -223,8 +224,8 @@ void setup() {
   // the gap is LCD panel specific, even panels with the same driver IC, can
   // have different gap value
   esp_lcd_panel_set_gap(panel_handle, 0, 35);
-  
-  // end region I8080 setup
+	
+  #pragma endregion I8080 setup
 
 #if defined(LCD_MODULE_CMD_1)
   for (uint8_t i = 0; i < (sizeof(lcd_st7789v) / sizeof(lcd_cmd_t)); i++) {
@@ -243,7 +244,7 @@ void setup() {
   }
 
 
-  // lvgl init
+  #pragma region lvgl init
 
   lv_init();
   lv_disp_buf = (lv_color_t *)heap_caps_malloc(LVGL_LCD_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
@@ -271,7 +272,7 @@ void setup() {
     lv_indev_drv_register(&indev_drv);
   }
   is_initialized_lvgl = true;
-  // end lvgl init
+  #pragma endregion lvgl init
 
 #if defined(TOUCH_READ_FROM_INTERRNUPT)
   attachInterrupt(
@@ -288,6 +289,9 @@ void setup() {
     pinMode(PIN_LCD_BL, OUTPUT);
     digitalWrite(PIN_POWER_ON, LOW);
     digitalWrite(PIN_LCD_BL, LOW);
+    // Reset wifi to avoid reconnect issues
+    WiFi.disconnect();
+    WiFi.mode(WIFI_OFF);
     esp_sleep_enable_ext0_wakeup((gpio_num_t)PIN_BUTTON_2, 0); // 1 = High, 0 = Low
     esp_deep_sleep_start();
   });
@@ -362,9 +366,12 @@ void wifi_test(void) {
   // lv_label_set_long_mode(ui_Screen2_TextArea1, LV_LABEL_LONG_SCROLL);
   lv_label_set_recolor(ui_Screen2_TextArea1, true);
   LV_DELAY(1);
-  WiFi.mode(WIFI_STA);
+  // Reset wifi to avoid reconnect issues
   WiFi.disconnect();
-  delay(100);
+  WiFi.mode(WIFI_OFF);
+  LV_DELAY(100);
+  WiFi.mode(WIFI_STA);
+  LV_DELAY(100);
   int n = WiFi.scanNetworks();
   Serial.println("scan done");
   if (n == 0) {
