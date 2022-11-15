@@ -26,6 +26,7 @@
 #include "assets-wifi-qrcode/ui.h"
 #include "ui.h"
 
+
 void ui_init(void);
 
 esp_lcd_panel_io_handle_t io_handle = NULL;
@@ -302,9 +303,11 @@ void setup() {
     button2.reset();
     button1.attachClick([](){
       Serial.println("btn1");  
+      esp_reset();
     });
     button2.attachClick([](){
-      Serial.println("btn2");  
+      Serial.println("btn2");
+      esp_reset();
     });
     ui_init();
   });
