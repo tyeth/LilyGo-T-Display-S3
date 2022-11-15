@@ -1,5 +1,7 @@
+// Set filesystem to >2MB app, currently designed for T-Display-S3 16MB flash 8mb PSRAM (OPI)
 
-#define DEBUG 0
+#define DEBUG 0   // Set to 1 to wait for serial before starting routine... 
+                  // NB: send enter in serial monitor to begin
 
 /* Please make sure your touch IC model. */
 // #define TOUCH_MODULES_CST_MUTUAL
@@ -177,7 +179,7 @@ void setup() {
   pinMode(PIN_POWER_ON, OUTPUT);
   digitalWrite(PIN_POWER_ON, HIGH);
   Serial.begin(115200);
-#if DEBUG
+#if(DEBUG==1)
   while(!Serial.available())
     LV_DELAY(10);
 #endif
