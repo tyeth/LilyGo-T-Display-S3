@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "author": "Tyeth Gundry",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-s3-devkitc-1",
+      "id": "esp",
+      "top": 119.99,
+      "left": 98.35,
+      "rotate": 90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-ili9341",
+      "id": "lcd1",
+      "top": -64.16,
+      "left": -97.74,
+      "rotate": -90,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn1",
+      "top": 3.44,
+      "left": 199.89,
+      "attrs": { "color": "green", "label": "Push Me!", "bounce": "1" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "lcd1:GND", "esp:GND.1", "black", [ "h14.8", "v67.41", "h-94.99" ] ],
+    [ "lcd1:RST", "esp:4", "purple", [] ],
+    [ "lcd1:D/C", "esp:2", "#8f4814", [ "h174.26", "v230.12", "h-91.25" ] ],
+    [ "lcd1:SCK", "esp:18", "gray", [] ],
+    [ "lcd1:MISO", "esp:19", "orange", [ "h185.09", "v274.73", "h-246.08" ] ],
+    [ "lcd1:MOSI", "esp:23", "green", [] ],
+    [ "esp:5V", "lcd1:VCC", "red", [ "v-17.93", "h70.59" ] ],
+    [ "lcd1:CS", "esp:15", "violet", [] ],
+    [ "esp:GND.1", "btn1:2.l", "black", [ "v-27.22", "h151.62" ] ],
+    [ "esp:5", "btn1:1.l", "green", [ "v-89.14", "h-20.99", "v-103.99" ] ]
+  ]
+}
