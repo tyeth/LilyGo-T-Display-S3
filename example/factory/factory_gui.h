@@ -9,14 +9,23 @@
 #define MSG_NEW_MIN    2
 #define MSG_NEW_VOLT   3
 #define MSG_NEW_TOUCH_POINT   4
+
 //
+
 //#define LV_DELAY(x)                                                                                                                                  \
+
 //  do {                                                                                                                                               \
+
 //    uint32_t t = x;                                                                                                                                  \
+
 //    while (t--) {                                                                                                                                    \
+
 //      lv_timer_handler();                                                                                                                            \
+
 //      delay(1);                                                                                                                                      \
+
 //    }                                                                                                                                                \
+
 //  } while (0);
 
 void ui_begin();

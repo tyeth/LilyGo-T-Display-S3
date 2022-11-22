@@ -35,7 +35,7 @@ lv_obj_t * ui_Screen2_TextArea1;
 void ui_event_LogoScreen(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
-    lv_obj_t * target = lv_event_get_target(e);
+    // lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SCREEN_LOADED) {
         _ui_screen_change(ui_DeviceScanningScreen, LV_SCR_LOAD_ANIM_OVER_TOP, 250, 500);
     }

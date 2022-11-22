@@ -27,8 +27,6 @@
 #include "pin_config.h"
 #include "sntp.h"
 #include "time.h"
-#include "sdkconfig.h"
-#include "assets-wifi-qrcode/ui.h"
 #include "ui.h"
 
 #define LV_DELAY(x)                                                                                                                                  \
@@ -162,6 +160,7 @@ static void lv_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data
 }
 
 void setup() {
+  ESP_LOGE("SETUP","Starting setup");
   cred1.ssid="free4all_2G";
   cred1.password="password";
   cred2.ssid="Tenda_60C06C";
@@ -178,6 +177,7 @@ void setup() {
   chosenWifi.password = WIFI_PASSWORLD; // Default misspelt example WIFI_PASSWORD from factory.ino/pin_config.h  
   pinMode(PIN_POWER_ON, OUTPUT);
   digitalWrite(PIN_POWER_ON, HIGH);
+  ESP_LOGE("SETUP","Serial Begin");
   Serial.begin(115200);
 #if(DEBUG==1)
   while(!Serial.available())
@@ -186,15 +186,20 @@ void setup() {
   
   Serial.println("Default wifi:");
   Serial.println(WIFI_SSID);
+  ESP_LOGE("SETUP","setting sntp dhcp and then timezone");
+
   sntp_servermode_dhcp(1); // (optional)
   //configTime(GMT_OFFSET_SEC, DAY_LIGHT_OFFSET_SEC, NTP_SERVER1, NTP_SERVER2);
   configTzTime(TIMEZONE, NTP_SERVER1, NTP_SERVER2);
+  ESP_LOGE("SETUP","Timezone set");
 
   #pragma region I8080 setup
 
   pinMode(PIN_LCD_RD, OUTPUT);
   digitalWrite(PIN_LCD_RD, HIGH);
   esp_lcd_i80_bus_handle_t i80_bus = NULL;
+  ESP_LOGE("SETUP","i80 bus config");
+
   esp_lcd_i80_bus_config_t bus_config = {
       .dc_gpio_num = PIN_LCD_DC,
       .wr_gpio_num = PIN_LCD_WR,
@@ -213,7 +218,9 @@ void setup() {
       .bus_width = 8,
       .max_transfer_bytes = LVGL_LCD_BUF_SIZE * sizeof(uint16_t),
   };
-  esp_lcd_new_i80_bus(&bus_config, &i80_bus);
+  ESP_LOGE("SETUP-i80bus","Returned: %d",esp_lcd_new_i80_bus(&bus_config, &i80_bus));
+  //FAILING HERE ON WOKWI
+  ESP_LOGE("SETUP","i80 panel config");
 
   esp_lcd_panel_io_i80_config_t io_config = {
       .cs_gpio_num = PIN_LCD_CS,
@@ -232,12 +239,16 @@ void setup() {
           },
   };
   ESP_ERROR_CHECK(esp_lcd_new_panel_io_i80(i80_bus, &io_config, &io_handle));
+  ESP_LOGE("SETUP","i80 panel error check done");
+  
   esp_lcd_panel_handle_t panel_handle = NULL;
   esp_lcd_panel_dev_config_t panel_config = {
       .reset_gpio_num = PIN_LCD_RES,
       .color_space = ESP_LCD_COLOR_SPACE_RGB,
       .bits_per_pixel = 16,
   };
+  ESP_LOGE("SETUP","st7789");
+
   esp_lcd_new_panel_st7789(io_handle, &panel_config, &panel_handle);
   esp_lcd_panel_reset(panel_handle);
   esp_lcd_panel_init(panel_handle);
@@ -251,14 +262,15 @@ void setup() {
   esp_lcd_panel_set_gap(panel_handle, 0, 35);
   
   #pragma endregion I8080 setup
+  ESP_LOGE("SETUP","i80 setup done");
 
-#if defined(LCD_MODULE_CMD_1)
-  for (uint8_t i = 0; i < (sizeof(lcd_st7789v) / sizeof(lcd_cmd_t)); i++) {
-    esp_lcd_panel_io_tx_param(io_handle, lcd_st7789v[i].cmd, lcd_st7789v[i].data, lcd_st7789v[i].len & 0x7f);
-    if (lcd_st7789v[i].len & 0x80)
-      delay(120);
-  }
-#endif
+  #if defined(LCD_MODULE_CMD_1)
+    for (uint8_t i = 0; i < (sizeof(lcd_st7789v) / sizeof(lcd_cmd_t)); i++) {
+      esp_lcd_panel_io_tx_param(io_handle, lcd_st7789v[i].cmd, lcd_st7789v[i].data, lcd_st7789v[i].len & 0x7f);
+      if (lcd_st7789v[i].len & 0x80)
+        delay(120);
+    }
+  #endif
   /* Lighten the screen with gradient */
 
   ledcSetup(0, 10000, 8);
@@ -397,10 +409,10 @@ void wifi_test(void) {
   ui_init();
   LV_DELAY(1000)
 
-//  
-//  lv_obj_t *log_label = lv_label_create(lv_scr_act());
-//  lv_obj_align(log_label, LV_ALIGN_TOP_LEFT, 0, 0);
-//  lv_obj_set_width(log_label, LV_PCT(100));
+  //  
+  //  lv_obj_t *log_label = lv_label_create(lv_scr_act());
+  //  lv_obj_align(log_label, LV_ALIGN_TOP_LEFT, 0, 0);
+  //  lv_obj_set_width(log_label, LV_PCT(100));
 
   lv_textarea_set_text(ui_Screen2_TextArea1, "Scanning WiFi");
   // lv_label_set_long_mode(ui_Screen2_TextArea1, LV_LABEL_LONG_SCROLL);
