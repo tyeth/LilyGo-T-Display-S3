@@ -1,4 +1,5 @@
 [wokwi]
 version=1
-firmware="example/arduino/factory/.pio/build/t-display-s3/firmware.bin"
-elf="example/arduino/factory/.pio/build/t-display-s3/firmware.elf"
+gdbServerPort=3333
+firmware="build/factory.ino.bin"
+elf="build/factory.ino.elf"

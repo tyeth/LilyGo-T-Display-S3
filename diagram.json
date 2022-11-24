@@ -9,7 +9,10 @@
       "top": 119.99,
       "left": 98.35,
       "rotate": 90,
-      "attrs": {}
+      "attrs": {
+        "flashSize": "16",
+        "psramSize": "8"
+      }
     },
     {
       "type": "wokwi-ili9341",

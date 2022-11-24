@@ -1,0 +1,88 @@
+// AUTOMATICALLY GENERATED FILE. PLEASE DO NOT MODIFY IT MANUALLY
+//
+// PIO Unified Debugger
+//
+// Documentation: https://docs.platformio.org/page/plus/debugging.html
+// Configuration: https://docs.platformio.org/page/projectconf/section_env_debug.html
+
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Wokwi GDB",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/factory.ino.elf",
+            "cwd": "${workspaceFolder}",
+            "MIMode": "gdb",
+            "miDebuggerPath": "C:\\dev\\Espressif\\tools\\xtensa-esp32s3-elf\\esp-2021r2-patch5-8.4.0\\xtensa-esp32s3-elf\\bin\\xtensa-esp32s3-elf-gdb.exe",
+            "miDebuggerServerAddress": "localhost:3333"
+          },
+         
+    {
+        "name": "Arduino",
+        "type": "arduino",
+        "request": "launch",
+        "program": "${file}",
+        "cwd": "${workspaceFolder}",
+     	"targetArchitecture": "esp32",
+        "debugServerPath": "C:\\dev\\Espressif\\tools\\openocd-esp32\\v0.11.0-esp32-20220706\\openocd-esp32\\bin\\openocd.exe",
+        "MIMode": "gdb",
+        "miDebuggerPath": "C:\\dev\\Espressif\\tools\\xtensa-esp32s3-elf\\esp-2021r2-patch5-8.4.0\\xtensa-esp32s3-elf\\bin\\xtensa-esp32s3-elf-gdb.exe",
+        "customLaunchSetupCommands": [
+            {
+                "text": "target remote localhost:3333"
+            },
+            {
+                "text": "file \"${file}\""
+            },
+            {
+                "text": "load"
+            },
+            {
+                "text": "monitor reset halt"
+            },
+            {
+                "text": "monitor reset init"
+            }
+        ],
+        "stopAtEntry": true,
+        "serverStarted": "Info\\ :\\ [\\w\\d\\.]*:\\ hardware",
+        "launchCompleteCommand": "exec-continue",
+        "filterStderr": true,
+        "args": []
+    },
+        {
+            "type": "platformio-debug",
+            "request": "launch",
+            "name": "PIO Debug",
+            "executable": "C:/dev/arduino/LilyGo-T-Display-S3/example/arduino/factory/.pio/build/t-display-s3/firmware.elf",
+            "projectEnvName": "t-display-s3",
+            "toolchainBinDir": "C:/Users/tyeth/.platformio/packages/toolchain-xtensa-esp32s3/bin",
+            "internalConsoleOptions": "openOnSessionStart",
+            "preLaunchTask": {
+                "type": "PlatformIO",
+                "task": "Pre-Debug (t-display-s3)"
+            }
+        },
+        {
+            "type": "platformio-debug",
+            "request": "launch",
+            "name": "PIO Debug (skip Pre-Debug)",
+            "executable": "C:/dev/arduino/LilyGo-T-Display-S3/example/arduino/factory/.pio/build/t-display-s3/firmware.elf",
+            "projectEnvName": "t-display-s3",
+            "toolchainBinDir": "C:/Users/tyeth/.platformio/packages/toolchain-xtensa-esp32s3/bin",
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "type": "platformio-debug",
+            "request": "launch",
+            "name": "PIO Debug (without uploading)",
+            "executable": "C:/dev/arduino/LilyGo-T-Display-S3/example/arduino/factory/.pio/build/t-display-s3/firmware.elf",
+            "projectEnvName": "t-display-s3",
+            "toolchainBinDir": "C:/Users/tyeth/.platformio/packages/toolchain-xtensa-esp32s3/bin",
+            "internalConsoleOptions": "openOnSessionStart",
+            "loadMode": "manual"
+        }
+    ]
+}
