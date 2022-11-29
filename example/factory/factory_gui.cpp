@@ -88,7 +88,7 @@ void ui_begin() {
   String text;
   esp_chip_info_t t;
   esp_chip_info(&t);
-  text = "chip : ";
+  text = "onboard chip : ";
   text += ESP.getChipModel();
   text += "\n";
   text += "psram size : ";
@@ -106,6 +106,7 @@ void ui_begin() {
   lv_msg_subsribe_obj(MSG_NEW_VOLT, bat_label, (void *)"VOLT : %d mV");
 
   lv_obj_t *touch_label = lv_label_create(tv3);
+  lv_label_set_text(touch_label, "Data would appear here if touch enabled...");
   lv_obj_align_to(touch_label, bat_label, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
   lv_obj_add_event_cb(touch_label, update_touch_point_subscriber_cb, LV_EVENT_MSG_RECEIVED, NULL);
   lv_msg_subsribe_obj(MSG_NEW_TOUCH_POINT, touch_label, (void *)"%s");
