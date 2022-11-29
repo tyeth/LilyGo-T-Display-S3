@@ -197,10 +197,26 @@ void setup() {
 
   pinMode(PIN_LCD_RD, OUTPUT);
   digitalWrite(PIN_LCD_RD, HIGH);
+  
+
+#ifdef ESP32
+  esp_lcd_spi_bus_handle_t lcd_spi_bus = NULL;
+ 
+   esp_lcd_panel_io_spi_config_t io_spi_config = {
+      .cs_gpio_num = PIN_LCD_CS,
+      .pclk_hz = EXAMPLE_LCD_PIXEL_CLOCK_HZ,
+      .trans_queue_depth = 20,
+      .on_color_trans_done = example_notify_lvgl_flush_ready,
+      .user_ctx = &disp_drv,
+      .lcd_cmd_bits = 8,
+      .lcd_param_bits = 8,
+  };
+  ESP_LOGE("SETUP-lcd-spi-bus","Returned: %d",esp_lcd_spi_bus_handle_t(&io_spi_config, &lcd_spi_bus));
+#else
   esp_lcd_i80_bus_handle_t i80_bus = NULL;
   ESP_LOGE("SETUP","i80 bus config");
 
-  esp_lcd_i80_bus_config_t bus_config = {
+  esp_lcd_i80_bus_config_t i80_bus_config = {
       .dc_gpio_num = PIN_LCD_DC,
       .wr_gpio_num = PIN_LCD_WR,
       .clk_src = LCD_CLK_SRC_PLL160M,
@@ -218,11 +234,10 @@ void setup() {
       .bus_width = 8,
       .max_transfer_bytes = LVGL_LCD_BUF_SIZE * sizeof(uint16_t),
   };
-  ESP_LOGE("SETUP-i80bus","Returned: %d",esp_lcd_new_i80_bus(&bus_config, &i80_bus));
+  ESP_LOGE("SETUP-i80bus","Returned: %d",esp_lcd_new_i80_bus(&i80_bus_config, &i80_bus));
   //FAILING HERE ON WOKWI
   ESP_LOGE("SETUP","i80 panel config");
-
-  esp_lcd_panel_io_i80_config_t io_config = {
+  esp_lcd_panel_io_i80_config_t io_i80_config = {
       .cs_gpio_num = PIN_LCD_CS,
       .pclk_hz = EXAMPLE_LCD_PIXEL_CLOCK_HZ,
       .trans_queue_depth = 20,
@@ -238,8 +253,10 @@ void setup() {
               .dc_data_level = 1,
           },
   };
-  ESP_ERROR_CHECK(esp_lcd_new_panel_io_i80(i80_bus, &io_config, &io_handle));
+
+  ESP_ERROR_CHECK(esp_lcd_new_panel_io_i80(i80_bus, &io_i80_config, &io_handle));
   ESP_LOGE("SETUP","i80 panel error check done");
+#endif
   
   esp_lcd_panel_handle_t panel_handle = NULL;
   esp_lcd_panel_dev_config_t panel_config = {
