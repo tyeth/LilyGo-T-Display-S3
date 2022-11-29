@@ -125,7 +125,7 @@ void setup() {
     }
 
     if (!foundRom) {
-      Serial.println("Failed to find rom file, please copy rom file to data folder and upload with \"ESP32 Sketch Data Upload\"");
+      Serial.println("Failed to find rom file, please copy rom file to data folder and upload with \"ESP32 Sketch Data Upload\" or platformio.exe run --target uploadfs --environment ESP32-S3-DevKitC-1");
       argv[0] = "/";
     }
 
