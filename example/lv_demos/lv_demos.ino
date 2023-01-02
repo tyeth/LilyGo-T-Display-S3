@@ -14,6 +14,7 @@
 This example can only be run on platformIO.
 Because Arduino cannot index into the demos directory.
 */
+
 #include "demos/lv_demos.h"
 #include "lv_conf.h"
 #include "lvgl.h" /* https://github.com/lvgl/lvgl.git */
@@ -25,6 +26,8 @@ Because Arduino cannot index into the demos directory.
 #include "esp_lcd_panel_vendor.h"
 #include "pin_config.h"
 
+
+    lv_obj_t * chart;
 esp_lcd_panel_io_handle_t io_handle = NULL;
 static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
 static lv_disp_drv_t disp_drv;      // contains callback functions
@@ -89,10 +92,13 @@ static void lv_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data
 #else
   if (touch.read()) {
 #endif
+
+    uint8_t touch_points_num = touch.getPointNum();
     TP_Point t = touch.getPoint(0);
     data->point.x = t.x;
     data->point.y = t.y;
-    data->state = LV_INDEV_STATE_PR;
+    data->state = (touch_points_num > 0) ? LV_INDEV_STATE_PRESSED : LV_INDEV_STATE_RELEASED;
+    // lv_msg_send(MSG_NEW_TOUCH_POINT, str_buf.c_str());
   } else
     data->state = LV_INDEV_STATE_REL;
 }
@@ -205,7 +211,10 @@ void setup() {
 #endif
 
 #if LV_USE_DEMO_WIDGETS
-  lv_demo_widgets();
+  // lv_demo_widgets();
+  lv_example_chart_4_on_tile();
+
+
 #elif LV_USE_DEMO_BENCHMARK
   lv_demo_benchmark();
 #elif LV_USE_DEMO_STRESS
@@ -215,9 +224,119 @@ void setup() {
 #else LV_USE_DEMO_MUSIC
   lv_demo_music();
 #endif
+
+
 }
 
 void loop() {
   lv_timer_handler();
   delay(2);
+  static uint32_t last_tick;
+  if (millis() - last_tick > 500) {
+    int16_t volt = (analogRead(PIN_BAT_VOLT) * 2 * 3.3 * 1000) / 4096;
+  //   lv_msg_send(MSG_NEW_VOLT, &volt);
+  Serial.printf("%u ",volt);
+  lv_chart_series_t* ser1 = lv_chart_get_series_next(chart, NULL);
+  lv_chart_set_next_value(chart,ser1, (lv_coord_t) ( lv_rand(volt,volt+1) ));
+  lv_chart_series_t* ser2 = lv_chart_get_series_next(chart, ser1);
+  lv_chart_set_next_value(chart,ser2,  lv_rand(2700,4900) );
+
+    last_tick = millis();
+  }
+}
+
+
+
+static void event_cb(lv_event_t * e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t * chart = lv_event_get_target(e);
+
+    if(code == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_invalidate(chart);
+    }
+    if(code == LV_EVENT_REFR_EXT_DRAW_SIZE) {
+        lv_coord_t * s = (lv_coord_t*)lv_event_get_param(e);
+        *s = LV_MAX(*s, 20);
+    }
+    else if(code == LV_EVENT_DRAW_POST_END) {
+        int32_t id = lv_chart_get_pressed_point(chart);
+        if(id == LV_CHART_POINT_NONE) return;
+
+        LV_LOG_USER("Selected point %d", (int)id);
+
+        lv_chart_series_t * ser = lv_chart_get_series_next(chart, NULL);
+        while(ser) {
+            lv_point_t p;
+            lv_chart_get_point_pos_by_id(chart, ser, id, &p);
+
+            lv_coord_t * y_array = lv_chart_get_y_array(chart, ser);
+            lv_coord_t value = y_array[id];
+
+            char buf[16];
+            lv_snprintf(buf, sizeof(buf), LV_SYMBOL_DUMMY"$%d", value);
+
+            lv_draw_rect_dsc_t draw_rect_dsc;
+            lv_draw_rect_dsc_init(&draw_rect_dsc);
+            draw_rect_dsc.bg_color = lv_color_black();
+            draw_rect_dsc.bg_opa = LV_OPA_50;
+            draw_rect_dsc.radius = 3;
+            draw_rect_dsc.bg_img_src = buf;
+            draw_rect_dsc.bg_img_recolor = lv_color_white();
+
+            lv_area_t a;
+            a.x1 = chart->coords.x1 + p.x - 20;
+            a.x2 = chart->coords.x1 + p.x + 20;
+            a.y1 = chart->coords.y1 + p.y - 30;
+            a.y2 = chart->coords.y1 + p.y - 10;
+
+            lv_draw_ctx_t * draw_ctx = lv_event_get_draw_ctx(e);
+            lv_draw_rect(draw_ctx, &draw_rect_dsc, &a);
+
+            ser = lv_chart_get_series_next(chart, ser);
+        }
+    }
+    else if(code == LV_EVENT_RELEASED) {
+        lv_obj_invalidate(chart);
+    }
+}
+
+/**
+ * Show the value of the pressed points
+ */
+void lv_example_chart_4_on_tile(void)
+{
+    /*Create tile*/
+    lv_obj_t *dis = lv_tileview_create(lv_scr_act());
+    lv_obj_align(dis, LV_ALIGN_TOP_RIGHT, 0, 0);
+    lv_obj_set_size(dis, LV_PCT(100), LV_PCT(100));
+    lv_obj_t *tv4 = lv_tileview_add_tile(dis, 0, 0, LV_DIR_HOR);
+  // lv_obj_t *tv2 = lv_tileview_add_tile(dis, 0, 1, LV_DIR_HOR);
+  // lv_obj_t *tv3 = lv_tileview_add_tile(dis, 0, 2, LV_DIR_HOR);
+  // lv_obj_t *tv4 = lv_tileview_add_tile(dis, 0, 3, LV_DIR_HOR);
+
+
+    /*Create a chart*/
+    chart = lv_chart_create(tv4);
+    //lv_obj_set_size(chart, 200, 150);
+    lv_obj_set_size(chart, LV_PCT(100), LV_PCT(100));
+    lv_obj_center(chart);
+
+    lv_obj_add_event_cb(chart, event_cb, LV_EVENT_ALL, NULL);
+    lv_obj_refresh_ext_draw_size(chart);
+
+    /*Zoom in a little in X*/
+    //lv_chart_set_zoom_x(chart, 200);
+
+    /*Add two data series*/
+    lv_chart_series_t * ser1 = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_RED), LV_CHART_AXIS_PRIMARY_Y);
+    lv_chart_series_t * ser2 = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_GREEN), LV_CHART_AXIS_PRIMARY_Y);
+    uint32_t i;
+    for(i = 0; i < 10; i++) {
+        lv_chart_set_next_value(chart, ser1, lv_rand(4400, 4900));
+        lv_chart_set_next_value(chart, ser2, lv_rand(2700, 4900));
+    }
+
+    lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, 2700, 5200);
+    lv_chart_set_update_mode(chart, LV_CHART_UPDATE_MODE_SHIFT);
 }
