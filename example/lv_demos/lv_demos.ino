@@ -5,12 +5,13 @@
 #endif
 
 #define TOUCH_MODULES_CST_MUTUAL
+// #define TOUCH_MODULES_CST_SELF
 #include "TouchLib.h"
 // #define TOUCH_READ_FROM_INTERRNUPT
 
 /* The product now has two screens, and the initialization code needs a small change in the new version. The LCD_MODULE_CMD_1 is used to define the
  * switch macro. */
-#define LCD_MODULE_CMD_1
+//#define LCD_MODULE_CMD_1
 
 /*
 This example can only be run on platformIO.
@@ -62,7 +63,11 @@ lcd_cmd_t lcd_st7789v[] = {
 #endif
 
 void my_log_cb(const char * buf);
+#if defined(TOUCH_MODULES_CST_MUTUAL)
 TouchLib touch(Wire, PIN_IIC_SDA, PIN_IIC_SCL, CTS328_SLAVE_ADDRESS, PIN_TOUCH_RES);
+#elif defined(TOUCH_MODULES_CST_SELF)
+TouchLib touch(Wire, PIN_IIC_SDA, PIN_IIC_SCL, CTS820_SLAVE_ADDRESS, PIN_TOUCH_RES);
+#endif
 
 bool inited_touch = false;
 #if defined(TOUCH_READ_FROM_INTERRNUPT)
