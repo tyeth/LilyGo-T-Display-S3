@@ -1,3 +1,5 @@
+#define MAX_SERIES_DATAPOINTS 126
+
 #ifndef USEPLATFORMIO
 #error "This example can only be run on platformIO"
 #endif
@@ -59,12 +61,21 @@ lcd_cmd_t lcd_st7789v[] = {
 };
 #endif
 
+void my_log_cb(const char * buf);
 TouchLib touch(Wire, PIN_IIC_SDA, PIN_IIC_SCL, CTS328_SLAVE_ADDRESS, PIN_TOUCH_RES);
 
 bool inited_touch = false;
 #if defined(TOUCH_READ_FROM_INTERRNUPT)
 bool get_int_signal = false;
 #endif
+
+
+void my_log_cb(const char * buf)
+{
+  Serial.print(buf);
+  Serial.flush();
+}
+
 
 static bool example_notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx) {
   if (is_initialized_lvgl) {
@@ -180,6 +191,15 @@ void setup() {
   }
 
   lv_init();
+  #if LV_USE_LOG != 0
+  lv_log_register_print_cb(my_log_cb);
+  LV_LOG_ERROR("logging on error message");
+  lv_log("test");
+  #else
+  ESP_LOGI("LV","LVGL logging off");
+  LV_LOG_ERROR("logging off error message");
+  #endif
+  
   lv_disp_buf = (lv_color_t *)heap_caps_malloc(LVGL_LCD_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
 
   lv_disp_draw_buf_init(&disp_buf, lv_disp_buf, NULL, LVGL_LCD_BUF_SIZE);
@@ -263,12 +283,19 @@ static void event_cb(lv_event_t * e)
         int32_t id = lv_chart_get_pressed_point(chart);
         if(id == LV_CHART_POINT_NONE) return;
 
-        LV_LOG_USER("Selected point %d", (int)id);
-
+        LV_LOG_USER("Selected: %d", (int)id);
+        u_int16_t seriesCounter = 0;
         lv_chart_series_t * ser = lv_chart_get_series_next(chart, NULL);
+        
+
         while(ser) {
+            u_int16_t startX = lv_chart_get_x_start_point(chart,ser);
+            LV_LOG_USER("x-axis start point: %d", startX);
+            //if(startX<12){}
+            seriesCounter++;
             lv_point_t p;
             lv_chart_get_point_pos_by_id(chart, ser, id, &p);
+            LV_LOG_USER("Series %d \tx: %d\ty: %d", seriesCounter, (int)p.x, (int)p.y);
 
             lv_coord_t * y_array = lv_chart_get_y_array(chart, ser);
             lv_coord_t value = y_array[id];
@@ -327,16 +354,24 @@ void lv_example_chart_4_on_tile(void)
 
     /*Zoom in a little in X*/
     //lv_chart_set_zoom_x(chart, 200);
+    
+    // set chart range
+    lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, 2700, 5200);
+    lv_chart_set_point_count(chart, MAX_SERIES_DATAPOINTS);
+    lv_chart_set_update_mode(chart, LV_CHART_UPDATE_MODE_CIRCULAR); //When SHIFTED instead of CIRCULAR then points and tooltips break, look at x_start
 
     /*Add two data series*/
     lv_chart_series_t * ser1 = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_RED), LV_CHART_AXIS_PRIMARY_Y);
     lv_chart_series_t * ser2 = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_GREEN), LV_CHART_AXIS_PRIMARY_Y);
+    // lv_chart_set_all_value(chart,ser1,LV_CHART_POINT_NONE);
+    // lv_chart_set_all_value(chart,ser2,LV_CHART_POINT_NONE);
+
     uint32_t i;
     for(i = 0; i < 10; i++) {
         lv_chart_set_next_value(chart, ser1, lv_rand(4400, 4900));
         lv_chart_set_next_value(chart, ser2, lv_rand(2700, 4900));
     }
+    
+    LV_LOG_USER("Point count: %d\n", lv_chart_get_point_count(chart));
 
-    lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, 2700, 5200);
-    lv_chart_set_update_mode(chart, LV_CHART_UPDATE_MODE_SHIFT);
 }
