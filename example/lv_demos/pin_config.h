@@ -3,7 +3,7 @@
 // #define WIFI_SSID                    "Your-ssid"
 // #define WIFI_PASSWORLD               "Your-password"
 #define WIFI_SSID                    "free4all_2G"
-#define WIFI_PASSWORLD               "password"
+#define WIFI_PASSWORDv               "password"
 
 #define WIFI_CONNECT_WAIT_MAX        (30 * 1000)
 
