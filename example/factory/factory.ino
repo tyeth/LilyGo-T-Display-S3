@@ -1,6 +1,8 @@
+// //#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#define TOUCH_MODULES_CST_MUTUAL
+
 /* Please make sure your touch IC model. */
-// #define TOUCH_MODULES_CST_MUTUAL
-#define TOUCH_MODULES_CST_SELF
+//#define TOUCH_MODULES_CST_SELF
 #include "TouchLib.h"
 // #define TOUCH_READ_FROM_INTERRNUPT
 
@@ -8,6 +10,7 @@
 #define LCD_MODULE_CMD_1
 
 #include "OneButton.h" /* https://github.com/mathertel/OneButton.git */
+#include "lv_conf.h"
 #include "lvgl.h"      /* https://github.com/lvgl/lvgl.git */
 
 #include "Arduino.h"
@@ -20,6 +23,10 @@
 #include "pin_config.h"
 #include "sntp.h"
 #include "time.h"
+#include "esp_log.h"
+#include "misc/lv_log.h"
+
+
 
 esp_lcd_panel_io_handle_t io_handle = NULL;
 static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
@@ -69,6 +76,8 @@ void wifi_test(void);
 void timeavailable(struct timeval *t);
 void printLocalTime();
 void SmartConfig();
+void my_log_cb(const char * buf);
+
 
 static bool example_notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx) {
   if (is_initialized_lvgl) {
@@ -97,27 +106,34 @@ static void lv_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data
   if (touch.read()) {
 #endif
     String str_buf;
-    uint8_t fn = touch.getPointNum();
-    str_buf += " Finger num : " + String(fn) + " \n";
-    for (uint8_t i = 0; i < fn; i++) {
+    uint8_t touch_points_num = touch.getPointNum();
+    str_buf += " Finger num : " + String(touch_points_num) + " \n";
+    for (uint8_t i = 0; i < touch_points_num; i++) {
       TP_Point t = touch.getPoint(i);
       str_buf += "x: " + String(t.x) + " y: " + String(t.y) + " p: " + String(t.pressure) + " \n";
     }
     TP_Point t = touch.getPoint(0);
     data->point.x = t.x;
     data->point.y = t.y;
-    data->state = LV_INDEV_STATE_PR;
+    data->state = (touch_points_num > 0) ? LV_INDEV_STATE_PRESSED : LV_INDEV_STATE_RELEASED;
     lv_msg_send(MSG_NEW_TOUCH_POINT, str_buf.c_str());
   } else
-    data->state = LV_INDEV_STATE_REL;
+    data->state = LV_INDEV_STATE_RELEASED;
+}
+
+void my_log_cb(const char * buf)
+{
+  Serial.print(buf);
+  Serial.flush();
 }
 
 void setup() {
+
   pinMode(PIN_POWER_ON, OUTPUT);
   digitalWrite(PIN_POWER_ON, HIGH);
   Serial.begin(115200);
-
-  sntp_servermode_dhcp(1); // (optional)
+  esp_log_level_set("*", ESP_LOG_VERBOSE);
+ // sntp_servermode_dhcp(1); // (optional)
   configTime(GMT_OFFSET_SEC, DAY_LIGHT_OFFSET_SEC, NTP_SERVER1, NTP_SERVER2);
 
   pinMode(PIN_LCD_RD, OUTPUT);
@@ -193,6 +209,14 @@ void setup() {
   }
 
   lv_init();
+  #if LV_USE_LOG != 0
+  lv_log_register_print_cb(my_log_cb);
+  LV_LOG_ERROR("logging on error message");
+  lv_log("test");
+  #else
+  ESP_LOGI("LV","LVGL logging off");
+  LV_LOG_ERROR("logging off error message");
+  #endif
   lv_disp_buf = (lv_color_t *)heap_caps_malloc(LVGL_LCD_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
 
   lv_disp_draw_buf_init(&disp_buf, lv_disp_buf, NULL, LVGL_LCD_BUF_SIZE);
@@ -240,9 +264,9 @@ void loop() {
   lv_timer_handler();
   button1.tick();
   button2.tick();
-  delay(3);
+  delay(1);
   static uint32_t last_tick;
-  if (millis() - last_tick > 100) {
+  if (millis() - last_tick > 500) {
     struct tm timeinfo;
     if (getLocalTime(&timeinfo)) {
       lv_msg_send(MSG_NEW_HOUR, &timeinfo.tm_hour);
@@ -295,8 +319,8 @@ void wifi_test(void) {
   }
   lv_label_set_text(log_label, text.c_str());
   Serial.println(text);
-  LV_DELAY(2000);
-  text = "Connecting to ";
+  LV_DELAY(200);
+  text += "\nConnecting to ";
   Serial.print("Connecting to ");
   text += WIFI_SSID;
   text += "\n";
@@ -351,7 +375,9 @@ void wifi_test(void) {
     lv_label_set_text(log_label, text.c_str());
   }
   LV_DELAY(2000);
+  lv_obj_del(log_label);
   ui_begin();
+  LV_DELAY(600);
 }
 
 void printLocalTime() {
