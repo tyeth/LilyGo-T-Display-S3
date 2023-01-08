@@ -211,7 +211,7 @@ void setup() {
       .lcd_cmd_bits = 8,
       .lcd_param_bits = 8,
   };
-  ESP_LOGE("SETUP-lcd-spi-bus","Returned: %d",esp_lcd_spi_bus_handle_t(&io_spi_config, &lcd_spi_bus));
+  //ESP_LOGE("SETUP-lcd-spi-bus","Returned: %d",esp_lcd_spi_bus_handle_t(&io_spi_config, &lcd_spi_bus));
 #else
   esp_lcd_i80_bus_handle_t i80_bus = NULL;
   ESP_LOGE("SETUP","i80 bus config");
@@ -336,7 +336,7 @@ void setup() {
   SD_MMC.setPins(PIN_SD_CLK, PIN_SD_CMD, PIN_SD_D0);
   inited_sd = SD_MMC.begin("/sdcard", true, true);
   Wire.begin(PIN_IIC_SDA, PIN_IIC_SCL);
-  inited_touch = touch.init(Wire, PIN_TOUCH_RES, PIN_TOUCH_INT);
+  inited_touch = touch.init();//Wire, PIN_TOUCH_RES, PIN_TOUCH_INT,);
 
   button1.attachDoubleClick([]() {
     SKIP_CURRENT = true;
