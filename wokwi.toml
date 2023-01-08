@@ -1,5 +1,5 @@
 [wokwi]
 version=1
 gdbServerPort=3333
-firmware="build/factory.ino.bin"
-elf="build/factory.ino.elf"
+firmware="example/factory/.pio/build/t-display-s3/firmware.bin"
+elf="example/factory/.pio/build/t-display-s3/firmware.elf"
